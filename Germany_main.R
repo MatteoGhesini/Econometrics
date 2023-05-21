@@ -35,13 +35,15 @@ dataset <- read_excel("Inflation-Unemployment.xlsx")
 ##### INITIAL STATISTICAL ANALYSIS #############################################
 ################################################################################
 
-describe(dataset[,-1])
+describe(dataset[c(2,3,5,6,8,9)])
 
 b = c(2,5)
-x11()
-boxplot(dataset[,-1])
-cor.plot(dataset[,b])
-dataset$'Shock Event Ger' <- as.factor(dataset$'Shock Event Ger')
+{
+  x11()
+  boxplot(dataset[,-1])
+  cor.plot(dataset[,b])
+  dataset$'Shock Event Ger' <- as.factor(dataset$'Shock Event Ger')
+}
 
 ################################################################################
 ##### TIME SERIES CONSTRUCTION #################################################
@@ -67,19 +69,12 @@ cpi<-data.frame(value=g_cpi, YEAR=1971:2020)
   print(p)
 }
 
-#JOHANSEN->
-#           trace H0: tao = tao* < k, H1: tao = k
-#           eigenvalue: tao = tao* <k
-#           tao = tao *
-#KESS->
-#           H0: stationary, H1: non-stationary
-#When we have a non stationary process we use the difference
-
+################################################################################
+##### STATIONARITY TEST: AUGMENTED DICKEY FULLER ###############################
+################################################################################
 # Augmented Dickey Fuller
-
 # H0: non stationary
 # H1: stationary
-
 
 library(aTSA)
 adf.test(as.matrix(g_cpi)) 
@@ -91,15 +86,18 @@ dg_cpi <- diff(g_cpi)
 adf.test(as.matrix(dg_cpi)) 
 adf.test(as.matrix(dg_u))
 
-# KPSS 
+################################################################################
+##### STATIONARITY TEST: KPSS ##################################################
+################################################################################
+#KPSS->
+#           H0: stationary, H1: non-stationary
+#When we have a non stationary process we use the difference
 
 kpss.test(as.matrix(g_cpi))
 kpss.test(as.matrix(g_u))
 
 kpss.test(as.matrix(dg_cpi))
 kpss.test(as.matrix(dg_u))
-
-#the variables are I(1)
 
 ################################################################################
 ##### SELECT VARIABLES #########################################################
@@ -116,39 +114,54 @@ y <- na.trim(y)
 ################################################################################
 ##### COINTEGRATION TEST: JOHANSEN TEST ########################################
 ################################################################################
+#JOHANSEN->
+#           trace H0: tao = tao* < k, H1: tao = k
+#           eigenvalue: tao = tao* <k
+#           tao = tao *
 
-# We choose nlags such that we reject r = 0 and accept r=1
 library(urca)
 y.CA <- ca.jo(cbind(dg_u, dg_cpi), type="trace", K=6, ecdet = c("none", "const", "trend"), spec=c("longrun", "transitory"))
 summary(y.CA)
+# We choose nlags such that:
 # 25.21 > 6.50 --> we reject r=0
 # 5.40 < 11.65 --> we accept r=1
 
 y.CA <- ca.jo(y, type="eigen", K=6)
 summary(y.CA) 
 
-# Alternative: Engle-Granger test
+################################################################################
+##### ALTERNATIVE TEST: ENGLE-GRANGER TEST #####################################
+################################################################################
 
 library(aTSA)
 coint.test(as.matrix(dg_u), as.matrix(dg_cpi) ,d = 0, nlag = 6, output = TRUE)
 # H0: no cointegration
 
-# Estimate VEC model
+################################################################################
+##### ESTIMATE VEC MODEL #######################################################
+################################################################################
 
 y.VEC <- cajorls(y.CA)
-
-# to see t-statistics and p-values
 summary(y.VEC$rlm)
 
-
+################################################################################
+##### GERMANY: LONG RUN (INFLATION) ############################################
+################################################################################
 source("Germany_long_inflation.R")
+
+################################################################################
+##### GERMANY: LONG RUN (UNEMPLOYMENT) #########################################
+################################################################################
 source("Germany_long_unemployment.R")
+
+################################################################################
+##### GERMANY: SHORT RUN (INFLATION) ###########################################
+################################################################################
 source("Germany_short_inflation.R")
+
+################################################################################
+##### GERMANY: SHORT RUN (UNEMPLOYMENT) ########################################
+################################################################################
 source("Germany_short_unemployment.R")
-
-
-
-
-
 
 

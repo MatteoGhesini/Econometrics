@@ -1,64 +1,115 @@
 ################################################################################
-##### USA: LONG RUN (UNEMPLOYMENT) #############################################
+##### MOVING AVERAGE (1) MODEL #################################################
 ################################################################################
 
-#MA(1)
-usaufitLR <- dynlm(usa_u ~  usa_cpi + usa_cpi_1)
-summary(usaufitLR)
+{
+  usaufitLR <- dynlm(usa_u ~  usa_cpi + usa_cpi_1)
+  summary(usaufitLR)
+}
 
-#AR(1)
-ARusaufitLR <- dynlm(usa_u ~  usa_cpi + usa_u_1)
-summary(ARusaufitLR)
+################################################################################
+##### AUTOREGRESSIVE (1) MODEL #################################################
+################################################################################
 
-#AR(2)
-AR2usaufitLR <- dynlm(usa_u ~  usa_cpi + usa_u_1 + usa_u_2)
-summary(AR2usaufitLR)
+{
+  ARusaufitLR <- dynlm(usa_u ~  usa_cpi + usa_u_1)
+  summary(ARusaufitLR)
+}
 
-#ARMA(1,1)
-ARMAusaufitLR <- dynlm(usa_u ~  usa_cpi + usa_u_1 + usa_cpi_1)
-summary(ARMAusaufitLR)
+################################################################################
+##### AUTOREGRESSIVE MOVING AVERAGE (1,1) MODEL ################################
+################################################################################
 
-#ARMA(2,2)
+{
+  ARMAusaufitLR <- dynlm(usa_u ~  usa_cpi + usa_u_1 + usa_cpi_1)
+  summary(ARMAusaufitLR)
+}
 
-ARMA2usaufitLR <- dynlm(usa_u ~  usa_cpi + usa_u_1 + usa_cpi_1 + usa_u_2 + usa_cpi_2)
-summary(ARMA2usaufitLR)
+################################################################################
+##### AUTOREGRESSIVE MOVING AVERAGE (2,2) MODEL ################################
+################################################################################
 
-#ARMA(2,1)
+{
+  ARMA2usaufitLR <- dynlm(usa_u ~  usa_cpi + usa_u_1 + usa_cpi_1 + usa_u_2 + usa_cpi_2)
+  summary(ARMA2usaufitLR)
+}
 
-ARMA21usaufitLR <- dynlm(usa_u ~  usa_cpi + usa_u_1 + usa_cpi_1 + usa_u_2 )
-summary(ARMA21usaufitLR)
+################################################################################
+##### AUTOREGRESSIVE MOVING AVERAGE (2,1) MODEL ################################
+################################################################################
 
-#ARMA(1,2)
+{
+  ARMA21usaufitLR <- dynlm(usa_u ~  usa_cpi + usa_u_1 + usa_cpi_1 + usa_u_2 )
+  summary(ARMA21usaufitLR)
+}
 
-ARMA12usaufitLR <- dynlm(usa_u ~  usa_cpi + usa_u_1 + usa_cpi_1 + usa_cpi_2 )
-summary(ARMA12usaufitLR)
+################################################################################
+##### AUTOREGRESSIVE MOVING AVERAGE (1,2) MODEL ################################
+################################################################################
 
-AIC(usaufitLR, ARusaufitLR, ARMAusaufitLR, ARMA2usaufitLR, ARMA21usaufitLR, ARMA12usaufitLR, AR2usaufitLR)
-BIC(usaufitLR, ARusaufitLR, ARMAusaufitLR, ARMA2usaufitLR, ARMA21usaufitLR, ARMA12usaufitLR, AR2usaufitLR)
+{
+  ARMA12usaufitLR <- dynlm(usa_u ~  usa_cpi + usa_u_1 + usa_cpi_1 + usa_cpi_2 )
+  summary(ARMA12usaufitLR)
+}
+
+################################################################################
+##### AUTOREGRESSIVE (2) MODEL #################################################
+################################################################################
+
+{
+  AR2usaufitLR <- dynlm(usa_u ~  usa_cpi + usa_u_1 + usa_u_2)
+  summary(AR2usaufitLR)
+}
+
+################################################################################
+##### SELECTING BEST MODEL #####################################################
+################################################################################
+
+AIC(usaufitLR, ARusaufitLR, ARMAusaufitLR)
+AIC(ARMA2usaufitLR, ARMA21usaufitLR, ARMA12usaufitLR)
+AIC(AR2usaufitLR)
+BIC(usaufitLR, ARusaufitLR, ARMAusaufitLR)
+BIC(ARMA2usaufitLR, ARMA21usaufitLR, ARMA12usaufitLR)
+BIC(AR2usaufitLR)
 
 #we choose ARMA(2,1) for the information criteria
 
-################TEST 
+################################################################################
+##### HETEROSKEDASTICITY TEST ##################################################
+################################################################################
 
-#TEST ETEROSCHEDASTICITà
 bptest(ARMA21usaufitLR, studentize = FALSE) #RIFUTO H0 -> Eteroschedasticità
 
-#ARCH TEST
-#library(FinTS)
+################################################################################
+##### ARCH TEST ################################################################
+################################################################################
+
 archTestusa_u_LR<- ArchTest(ARMA21usaufitLR$residuals, lags=2, demean=FALSE)
 archTestusa_u_LR
 
-#DISTRIBUZIONE F-STATISTIC
+################################################################################
+##### F-STATISTIC DISTRIBUTION TEST ############################################
+################################################################################
+
 resettest(usa_u ~  usa_cpi + usa_u_1 +usa_u_2+ usa_cpi_1 ) #ACCETTO H0 -> Non ho bisognon di termini di y^2,...
 
-#WALD
+################################################################################
+##### WALD TEST ################################################################
+################################################################################
 
 wald.test(Sigma = vcov(ARMA21usaufitLR), b = coef(ARMA21usaufitLR), Terms = 2:5)
 
-#AUTOCORRELATION
+################################################################################
+##### DURBIN-WATSON TEST #######################################################
+################################################################################
 
-X11()
 dwtest(ARMA21usaufitLR)
 Box.test(ARMA21usaufitLR$residuals, type = "Ljung-Box", lag = 6)
 Box.test(ARMA21usaufitLR$residuals, type = "Box-Pierce", lag = 6) 
-acf(ARMA21usaufitLR$residuals)
+
+{
+  X11()
+  acf(ARMA21usaufitLR$residuals)
+}
+
+

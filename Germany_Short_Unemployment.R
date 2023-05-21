@@ -1,62 +1,103 @@
 ################################################################################
-##### GERMANY: SHORT RUN (UNEMPLOYMENT) ########################################
+##### MOVING AVERAGE (1) MODEL #################################################
 ################################################################################
 
-#MA(1)
-gufitSR <- dynlm(dg_u ~  dg_cpi + dg_cpi_1)
-summary(gufitSR)
+{
+  gufitSR <- dynlm(dg_u ~  dg_cpi + dg_cpi_1)
+  summary(gufitSR)
+}
 
-#AR(1)
+################################################################################
+##### AUTOREGRESSIVE (1) MODEL #################################################
+################################################################################
 
-ARgufitSR <- dynlm(dg_u ~  dg_cpi + dg_u_1)
-summary(ARgufitSR)
+{
+  ARgufitSR <- dynlm(dg_u ~  dg_cpi + dg_u_1)
+  summary(ARgufitSR)
+}
 
-#ARMA(1,1)
+################################################################################
+##### AUTOREGRESSIVE MOVING AVERAGE (1,1) MODEL ################################
+################################################################################
 
-ARMAgufitSR <- dynlm(dg_u ~  dg_cpi + dg_u_1 + dg_cpi_1)
-summary(ARMAgufitSR)
+{
+  ARMAgufitSR <- dynlm(dg_u ~  dg_cpi + dg_u_1 + dg_cpi_1)
+  summary(ARMAgufitSR)
+}
 
-#ARMA(2,2)
+################################################################################
+##### AUTOREGRESSIVE MOVING AVERAGE (2,2) MODEL ################################
+################################################################################
 
-ARMA2gufitSR <- dynlm(dg_u ~  dg_cpi + dg_u_1 + dg_cpi_1 + dg_u_2 + dg_cpi_2)
-summary(ARMA2gufitSR)
+{
+  ARMA2gufitSR <- dynlm(dg_u ~  dg_cpi + dg_u_1 + dg_cpi_1 + dg_u_2 + dg_cpi_2)
+  summary(ARMA2gufitSR)
+}
 
-#ARMA(2,1)
+################################################################################
+##### AUTOREGRESSIVE MOVING AVERAGE (2,1) MODEL ################################
+################################################################################
 
-ARMA21gufitSR <- dynlm(dg_u ~  dg_cpi + dg_u_1 + dg_cpi_1 + dg_u_2)
-summary(ARMA21gufitSR)
+{
+  ARMA21gufitSR <- dynlm(dg_u ~  dg_cpi + dg_u_1 + dg_cpi_1 + dg_u_2)
+  summary(ARMA21gufitSR)
+}
 
-#AR(2)
+################################################################################
+##### AUTOREGRESSIVE (2) MODEL #################################################
+################################################################################
 
-AR2gufitSR <- dynlm(dg_u ~  dg_cpi + dg_u_1 + dg_u_2)
-summary(AR2gufitSR)
+{
+  AR2gufitSR <- dynlm(dg_u ~  dg_cpi + dg_u_1 + dg_u_2)
+  summary(AR2gufitSR)
+}
 
-AIC(gufitSR, ARgufitSR, ARMAgufitSR, ARMA2gufitSR, ARMA21gufitSR, AR2gufitSR)
-BIC(gufitSR, ARgufitSR, ARMAgufitSR, ARMA2gufitSR, ARMA21gufitSR, AR2gufitSR)
+################################################################################
+##### SELECTING BEST MODEL #####################################################
+################################################################################
+
+AIC(gufitSR, ARgufitSR, ARMAgufitSR)
+AIC(ARMA2gufitSR, ARMA21gufitSR, AR2gufitSR)
+BIC(gufitSR, ARgufitSR, ARMAgufitSR)
+BIC(ARMA2gufitSR, ARMA21gufitSR, AR2gufitSR)
 
 #the best one is ARMA(1,1)
 
-#TEST STATISTICI
+################################################################################
+##### HETEROSKEDASTICITY TEST ##################################################
+################################################################################
 
-#TEST ETEROSCHEDASTICITà
 bptest(ARMAgufitSR, studentize = FALSE) 
 
-#ARCH TEST
+################################################################################
+##### ARCH TEST ################################################################
+################################################################################
 
 archTestSRdg_u <- ArchTest(ARMAgufitSR$residuals, lags = 1, demean = FALSE)
 archTestSRdg_u
 
-#DISTRIBUZIONE F-STATISTIC
+################################################################################
+##### F-STATISTIC DISTRIBUTION TEST ############################################
+################################################################################
+
 resettest(dg_u ~  dg_cpi + dg_cpi_1 + dg_u_1) 
 
-#WALD
+################################################################################
+##### WALD TEST ################################################################
+################################################################################
 
 wald.test(Sigma = vcov(ARMAgufitSR), b = coef(ARMAgufitSR), Terms = 2:4)
 
-#AUTOCORRELATION
+################################################################################
+##### DURBIN-WATSON TEST #######################################################
+################################################################################
 
 dwtest(ARMAgufitSR)
 Box.test(ARMAgufitSR$residuals, type = "Ljung-Box", lag = 6)
 Box.test(ARMAgufitSR$residuals, type = "Box-Pierce", lag = 6) 
-x11()
-acf(ARMAgufitSR$residuals)
+{
+  x11()
+  acf(ARMAgufitSR$residuals)
+}
+
+

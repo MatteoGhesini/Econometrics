@@ -1,63 +1,111 @@
-################################################################################
-##### GERMANY: SHORT RUN (INFLATION) ###########################################
-################################################################################
+
 
 dg_cpi_1 <- lag(dg_cpi, -1, na.pad = TRUE)
 dg_u_1 <- lag(dg_u, -1, na.pad = TRUE)
 
-#MA(1)
-gfitSR <- dynlm(dg_cpi ~  dg_u + dg_u_1)
-summary(gfitSR)
+################################################################################
+##### MOVING AVERAGE (1) MODEL #################################################
+################################################################################
 
-#AR(1)
-ARgfitSR <- dynlm(dg_cpi ~  dg_u + dg_cpi_1)
-summary(ARgfitSR)
+{
+  gfitSR <- dynlm(dg_cpi ~  dg_u + dg_u_1)
+  summary(gfitSR)
+}
 
-###############
+################################################################################
+##### AUTOREGRESSIVE (1) MODEL #################################################
+################################################################################
 
-#ARMA(1,1)
-ARMAgfitSR <- dynlm(dg_cpi ~  dg_u + dg_cpi_1 + dg_u_1)
-summary(ARMAgfitSR)
+{
+  ARgfitSR <- dynlm(dg_cpi ~  dg_u + dg_cpi_1)
+  summary(ARgfitSR)
+}
 
-#ARMA(2,2)
+################################################################################
+##### AUTOREGRESSIVE MOVING AVERAGE (1,1) MODEL ################################
+################################################################################
+
+{
+  ARMAgfitSR <- dynlm(dg_cpi ~  dg_u + dg_cpi_1 + dg_u_1)
+  summary(ARMAgfitSR)
+}
+
+################################################################################
+##### AUTOREGRESSIVE MOVING AVERAGE (2,2) MODEL ################################
+################################################################################
+
 dg_cpi_2 <- lag(dg_cpi, -2, na.pad = TRUE) 
 dg_u_2 <- lag(dg_u, -2, na.pad = TRUE)
 
-ARMA2gfitSR <- dynlm(dg_cpi ~  dg_u + dg_cpi_1 + dg_u_1+ dg_cpi_2 + dg_u_2)
-summary(ARMA2gfitSR)
+{
+  ARMA2gfitSR <- dynlm(dg_cpi ~  dg_u + dg_cpi_1 + dg_u_1+ dg_cpi_2 + dg_u_2)
+  summary(ARMA2gfitSR)
+}
 
-#ARMA(2,1)
-ARMA21gfitSR <- dynlm(dg_cpi ~  dg_u + dg_cpi_1 + dg_u_1+ dg_cpi_2)
-summary(ARMA21gfitSR)
+################################################################################
+##### AUTOREGRESSIVE MOVING AVERAGE (2,1) MODEL ################################
+################################################################################
 
-#AR(2)
-AR2gfitSR <- dynlm(dg_cpi ~  dg_u + dg_cpi_1 + dg_cpi_2)
-summary(AR2gfitSR)
+{
+  ARMA21gfitSR <- dynlm(dg_cpi ~  dg_u + dg_cpi_1 + dg_u_1+ dg_cpi_2)
+  summary(ARMA21gfitSR)
+}
 
-AIC(gfitSR, ARgfitSR, ARMAgfitSR, ARMA2gfitSR, ARMA21gfitSR, AR2gfitSR)
-BIC(gfitSR, ARgfitSR, ARMAgfitSR, ARMA2gfitSR, ARMA21gfitSR, AR2gfitSR)
+################################################################################
+##### AUTOREGRESSIVE (2) MODEL #################################################
+################################################################################
 
-#we choose ARMA(2,0)
+{
+  AR2gfitSR <- dynlm(dg_cpi ~  dg_u + dg_cpi_1 + dg_cpi_2)
+  summary(AR2gfitSR)
+}
 
-#TEST ETEROSCHEDASTICITà
+################################################################################
+##### SELECTING BEST MODEL #####################################################
+################################################################################
+
+AIC(gfitSR, ARgfitSR, ARMAgfitSR)
+AIC(ARMA2gfitSR, ARMA21gfitSR, AR2gfitSR)
+BIC(gfitSR, ARgfitSR, ARMAgfitSR)
+BIC(ARMA2gfitSR, ARMA21gfitSR, AR2gfitSR)
+
+# We choose ARMA(2,0)
+
+################################################################################
+##### HETEROSKEDASTICITY TEST ##################################################
+################################################################################
+
 bptest(AR2gfitSR, studentize = FALSE) 
 
-#ARCH TEST VISTO CHE ABBIAMO RIFUTATO IL BP
+################################################################################
+##### ARCH TEST ################################################################
+################################################################################
 
 archTestSRdg_cpi <- ArchTest(AR2gfitSR$residuals, lags = 2, demean = FALSE)
 archTestSRdg_cpi
 
-#DISTRIBUZIONE F-STATISTIC
+################################################################################
+##### F-STATISTIC DISTRIBUTION TEST ############################################
+################################################################################
+
 resettest(dg_cpi ~  dg_u + dg_cpi_1 + dg_cpi_2) 
 
-#WALD
+################################################################################
+##### WALD TEST ################################################################
+################################################################################
 
 wald.test(Sigma = vcov(AR2gfitSR), b = coef(AR2gfitSR), Terms = 2:4)
 
-#AUTOCORRELATION
+################################################################################
+##### DURBIN-WATSON TEST #######################################################
+################################################################################
 
 dwtest(AR2gfitSR)
 Box.test(AR2gfitSR$residuals, type = "Ljung-Box", lag = 6)
 Box.test(AR2gfitSR$residuals, type = "Box-Pierce", lag = 6) 
-x11()
-acf(AR2gfitSR$residuals)
+{
+  x11()
+  acf(AR2gfitSR$residuals)
+}
+
+

@@ -71,19 +71,12 @@ dusa_u <- diff(usa_u)
 d2usa_cpi <- diff(usa_cpi, differences = 2)
 d2usa_u <- diff(usa_u, differences = 2)
 
-#JOHANSEN->
-#           trace H0: tao = tao* < k, H1: tao = k
-#           eigenvalue: tao = tao* <k
-#           tao = tao *
-#KESS->
-#           H0: stationary, H1: non-stationary
-#When we have a non stationary process we use the difference
-
+################################################################################
+##### STATIONARITY TEST: AUGMENTED DICKEY FULLER ###############################
+################################################################################
 # Augmented Dickey Fuller
-
 # H0: non stationary
 # H1: stationary
-
 
 library(aTSA)
 adf.test(as.matrix(usa_cpi)) 
@@ -92,10 +85,12 @@ adf.test(as.matrix(usa_u))
 adf.test(as.matrix(dusa_cpi)) 
 adf.test(as.matrix(dusa_u))
 
-
-#I(1)
-
-# KPSS 
+################################################################################
+##### STATIONARITY TEST: KPSS ##################################################
+################################################################################
+#KPSS->
+#           H0: stationary, H1: non-stationary
+#When we have a non stationary process we use the difference
 
 kpss.test(as.matrix(usa_cpi))
 kpss.test(as.matrix(usa_u))
@@ -103,17 +98,24 @@ kpss.test(as.matrix(usa_u))
 kpss.test(as.matrix(dusa_cpi))
 kpss.test(as.matrix(dusa_u))
 
+################################################################################
+##### PLOT DIFFERENCES ON TIMES SERIES #########################################
+################################################################################
 
-##################################
-
-# Plot diff between unemployment and inflation
-dusa_u_cpi <- dusa_u
-X11()
-par(mfrow=c(1,1))
-plot(dusa_u_cpi, type='l', main="(diff) unemployment vs. (diff) inflation", col="blue", ylim= c(-5,5))
-lines(dusa_cpi, col="red")
-legend(x=1990, y = 4.5, c("unemployment", "inflation"), c("red","blue"), c("red","blue"))
-
+u<-data.frame(value=dusa_u, YEAR=1972:2020)
+cpi<-data.frame(value=dusa_cpi, YEAR=1972:2020)
+{
+  x11()
+  p = ggplot(u) +
+    geom_line(aes(x=as.numeric(YEAR),y=as.numeric(value),col="Unemployment")) +
+    geom_line(data=cpi, aes(x=as.numeric(YEAR),y=as.numeric(value),col="Inflation")) +
+    labs(title = "Difference on Time Series") + 
+    xlab("year") +  ylab("") +
+    theme(plot.title = element_text(hjust = 0.5)) +
+    scale_color_manual(values = c("blue", "red"), guide = guide_legend(title = "Data"))
+  
+  print(p)
+}
 
 ################################################################################
 ##### SELECT VARIABLES #########################################################
@@ -130,33 +132,60 @@ y <- na.trim(y)
 ################################################################################
 ##### COINTEGRATION TEST: JOHANSEN TEST ########################################
 ################################################################################
+#JOHANSEN->
+#           trace H0: tao = tao* < k, H1: tao = k
+#           eigenvalue: tao = tao* <k
+#           tao = tao *
 
 library(urca)
 y.CA <- ca.jo(cbind(dusa_u, dusa_cpi), type="trace", K=5, ecdet = c("none", "const", "trend"), spec=c("longrun", "transitory"))
 summary(y.CA)
-#scegliamo nlags in modo da soddisfare le seguenti condizioni:
+# We choose nlags such that:
 # 21.92 > 15.66 --> we reject r=0
 # 6.14 < 6.50 --> we accept r=1
 
 y.CA <- ca.jo(y, type="eigen", K=5)
 summary(y.CA) 
 
-# Alternative: Engle-Granger test
+################################################################################
+##### ALTERNATIVE TEST: ENGLE-GRANGER TEST #####################################
+################################################################################
 
 library(aTSA)
 coint.test(as.matrix(dusa_u), as.matrix(dusa_cpi) ,d = 0, nlag = 5, output = TRUE)
 # H0: no cointegration
 
-# Estimate VEC model
+################################################################################
+##### ESTIMATE VEC MODEL #######################################################
+################################################################################
 
 y.VEC <- cajorls(y.CA)
-
-# to see t-statistics and p-values
 summary(y.VEC$rlm)
 
+################################################################################
+##### USA: LONG RUN (INFLATION) ################################################
+################################################################################
 source("USA_long_inflation.R")
+
+################################################################################
+##### USA: LONG RUN (UNEMPLOYMENT) #############################################
+################################################################################
 source("USA_long_unemployment.R")
+
+################################################################################
+##### USA: SHORT RUN (INFLATION) ###############################################
+################################################################################
 source("USA_short_inflation.R")
+
+################################################################################
+##### USA: SHORT RUN (UNEMPLOYMENT) ############################################
+################################################################################
 source("USA_short_unemployment.R")
+
+################################################################################
+##### USA: DUMMY ###############################################################
+################################################################################
+source("USA_dummy.R")
+
 
 

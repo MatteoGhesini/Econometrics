@@ -1,76 +1,134 @@
-################################################################################
-##### USA: SHORT RUN (INFLATION) ###############################################
-################################################################################
 
 dusa_cpi_1 <- lag(dusa_cpi, -1, na.pad = TRUE)
 dusa_u_1 <- lag(dusa_u, -1, na.pad = TRUE)
 
-#MA(1)
-usafitSR <- dynlm(dusa_cpi ~  dusa_u + dusa_u_1)
-summary(usafitSR)
+################################################################################
+##### MOVING AVERAGE (1) MODEL #################################################
+################################################################################
 
-#AR(1)
-ARusafitSR <- dynlm(dusa_cpi ~  dusa_u + dusa_cpi_1)
-summary(ARusafitSR)
+{
+  usafitSR <- dynlm(dusa_cpi ~  dusa_u + dusa_u_1)
+  summary(usafitSR)
+}
 
-###############
+################################################################################
+##### AUTOREGRESSIVE (1) MODEL #################################################
+################################################################################
 
-#ARMA(1,1)
-ARMAusafitSR <- dynlm(dusa_cpi ~  dusa_u + dusa_cpi_1 + dusa_u_1)
-summary(ARMAusafitSR)
+{
+  ARusafitSR <- dynlm(dusa_cpi ~  dusa_u + dusa_cpi_1)
+  summary(ARusafitSR)
+}
 
-#ARMA(2,2)
+################################################################################
+##### AUTOREGRESSIVE MOVING AVERAGE (1,1) MODEL ################################
+################################################################################
+
+{
+  ARMAusafitSR <- dynlm(dusa_cpi ~  dusa_u + dusa_cpi_1 + dusa_u_1)
+  summary(ARMAusafitSR)
+}
+
+################################################################################
+##### AUTOREGRESSIVE MOVING AVERAGE (2,2) MODEL ################################
+################################################################################
+
 dusa_cpi_2 <- lag(dusa_cpi, -2, na.pad = TRUE) 
 dusa_u_2 <- lag(dusa_u, -2, na.pad = TRUE)
 
-ARMA2usafitSR <- dynlm(dusa_cpi ~  dusa_u + dusa_cpi_1 + dusa_u_1+ dusa_cpi_2 + dusa_u_2)
-summary(ARMA2usafitSR)
+{
+  ARMA2usafitSR <- dynlm(dusa_cpi ~  dusa_u + dusa_cpi_1 + dusa_u_1+ dusa_cpi_2 + dusa_u_2)
+  summary(ARMA2usafitSR)
+}
 
-#ARMA(2,1)
-ARMA21usafitSR <- dynlm(dusa_cpi ~  dusa_u + dusa_cpi_1 + dusa_u_1+ dusa_cpi_2)
-summary(ARMA21usafitSR)
+################################################################################
+##### AUTOREGRESSIVE MOVING AVERAGE (2,1) MODEL ################################
+################################################################################
 
-#ARMA(1,2)
-ARMA12usafitSR <- dynlm(dusa_cpi ~  dusa_u + dusa_cpi_1 + dusa_u_1+ dusa_u_2)
-summary(ARMA12usafitSR)
+{
+  ARMA21usafitSR <- dynlm(dusa_cpi ~  dusa_u + dusa_cpi_1 + dusa_u_1+ dusa_cpi_2)
+  summary(ARMA21usafitSR)
+}
 
-#AR(2)
-AR2usafitSR <- dynlm(dusa_cpi ~  dusa_u + dusa_cpi_1 + dusa_cpi_2)
-summary(AR2usafitSR)
+################################################################################
+##### AUTOREGRESSIVE MOVING AVERAGE (1,2) MODEL ################################
+################################################################################
 
-#AR(3)
+{
+  ARMA12usafitSR <- dynlm(dusa_cpi ~  dusa_u + dusa_cpi_1 + dusa_u_1+ dusa_u_2)
+  summary(ARMA12usafitSR)
+}
+
+################################################################################
+##### AUTOREGRESSIVE (2) MODEL #################################################
+################################################################################
+
+{
+  AR2usafitSR <- dynlm(dusa_cpi ~  dusa_u + dusa_cpi_1 + dusa_cpi_2)
+  summary(AR2usafitSR)
+}
+
+################################################################################
+##### AUTOREGRESSIVE (3) MODEL #################################################
+################################################################################
+
 dusa_cpi_3 <- lag(dusa_cpi, -3, na.pad = TRUE) 
 dusa_u_3 <- lag(dusa_u, -3, na.pad = TRUE)
-AR3usafitSR <- dynlm(dusa_cpi ~  dusa_u + dusa_cpi_1 + dusa_cpi_2+ dusa_cpi_3)
-summary(AR3usafitSR)
 
+{
+  AR3usafitSR <- dynlm(dusa_cpi ~  dusa_u + dusa_cpi_1 + dusa_cpi_2+ dusa_cpi_3)
+  summary(AR3usafitSR)
+}
 
-#AIC & BIC
+################################################################################
+##### SELECTING BEST MODEL #####################################################
+################################################################################
 
-AIC(usafitSR, ARusafitSR, ARMAusafitSR, ARMA2usafitSR, ARMA21usafitSR, AR2usafitSR, AR3usafitSR)
-BIC(usafitSR, ARusafitSR, ARMAusafitSR, ARMA2usafitSR, ARMA21usafitSR, AR2usafitSR, AR3usafitSR)
+AIC(usafitSR, ARusafitSR, ARMAusafitSR)
+AIC(ARMA2usafitSR, ARMA21usafitSR, AR2usafitSR)
+AIC(AR3usafitSR)
+BIC(usafitSR, ARusafitSR, ARMAusafitSR)
+BIC(ARMA2usafitSR, ARMA21usafitSR, AR2usafitSR)
+BIC(AR3usafitSR)
 
 #we choose AR(3)
 
-#TEST ETEROSCHEDASTICITà
+################################################################################
+##### HETEROSKEDASTICITY TEST ##################################################
+################################################################################
+
 bptest(AR3usafitSR, studentize = FALSE) #ACCETTO H0 -> Omoschedasticità
 
-#ARCH TEST
-#library(FinTS)
+################################################################################
+##### ARCH TEST ################################################################
+################################################################################
+
 archTestusa_cpi_SR<- ArchTest(AR3usafitSR$residuals, lags=3, demean=FALSE)
 archTestusa_cpi_SR
 
-#DISTRIBUZIONE F-STATISTIC
+################################################################################
+##### F-STATISTIC DISTRIBUTION TEST ############################################
+################################################################################
+
 resettest(dusa_cpi ~  dusa_u + dusa_cpi_1 + dusa_cpi_2+ dusa_cpi_3) #ACCETTO H0 -> Non ho bisognon di termini di y^2,...
 
-#WALD
+################################################################################
+##### WALD TEST ################################################################
+################################################################################
 
 wald.test(Sigma = vcov(AR3usafitSR), b = coef(AR3usafitSR), Terms = 2:5)
 
-#AUTOCORRELATION
+################################################################################
+##### DURBIN-WATSON TEST #######################################################
+################################################################################
 
-x11()
 dwtest(AR3usafitSR)
 Box.test(AR3usafitSR$residuals, type = "Ljung-Box", lag = 6)
 Box.test(AR3usafitSR$residuals, type = "Box-Pierce", lag = 6)
-acf(AR3usafitSR$residuals)
+
+{
+  x11()
+  acf(AR3usafitSR$residuals)
+}
+
+

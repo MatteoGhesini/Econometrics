@@ -1,73 +1,128 @@
 ################################################################################
-##### USA: SHORT RUN (UNEMPLOYMENT) ############################################
+##### MOVING AVERAGE (1) MODEL #################################################
 ################################################################################
 
-#MA(1)
-usaufitSR <- dynlm(dusa_u ~  dusa_cpi + dusa_cpi_1)
-summary(usaufitSR)
+{
+  usaufitSR <- dynlm(dusa_u ~  dusa_cpi + dusa_cpi_1)
+  summary(usaufitSR)
+}
 
-#AR(1)
+################################################################################
+##### AUTOREGRESSIVE (1) MODEL #################################################
+################################################################################
 
-ARusaufitSR <- dynlm(dusa_u ~  dusa_cpi + dusa_u_1)
-summary(ARusaufitSR)
+{
+  ARusaufitSR <- dynlm(dusa_u ~  dusa_cpi + dusa_u_1)
+  summary(ARusaufitSR)
+}
 
-#ARMA(1,1)
+################################################################################
+##### AUTOREGRESSIVE MOVING AVERAGE (1,1) MODEL ################################
+################################################################################
 
-ARMAusaufitSR <- dynlm(dusa_u ~  dusa_cpi + dusa_u_1 + dusa_cpi_1)
-summary(ARMAusaufitSR)
+{
+  ARMAusaufitSR <- dynlm(dusa_u ~  dusa_cpi + dusa_u_1 + dusa_cpi_1)
+  summary(ARMAusaufitSR)
+}
 
-#ARMA(2,2)
+################################################################################
+##### AUTOREGRESSIVE MOVING AVERAGE (2,2) MODEL ################################
+################################################################################
 
-ARMA2usaufitSR <- dynlm(dusa_u ~  dusa_cpi + dusa_u_1 + dusa_cpi_1 + dusa_u_2 + dusa_cpi_2)
-summary(ARMA2usaufitSR)
+{
+  ARMA2usaufitSR <- dynlm(dusa_u ~  dusa_cpi + dusa_u_1 + dusa_cpi_1 + dusa_u_2 + dusa_cpi_2)
+  summary(ARMA2usaufitSR)
+}
 
-#ARMA(2,1)
+################################################################################
+##### AUTOREGRESSIVE MOVING AVERAGE (2,1) MODEL ################################
+################################################################################
 
-ARMA21usaufitSR <- dynlm(dusa_u ~  dusa_cpi + dusa_u_1 + dusa_cpi_1 + dusa_u_2)
-summary(ARMA21usaufitSR)
+{
+  ARMA21usaufitSR <- dynlm(dusa_u ~  dusa_cpi + dusa_u_1 + dusa_cpi_1 + dusa_u_2)
+  summary(ARMA21usaufitSR)
+}
 
+################################################################################
+##### AUTOREGRESSIVE MOVING AVERAGE (1,2) MODEL ################################
+################################################################################
 
-#ARMA(1,2)
-ARMA12usaufitSR <- dynlm(dusa_u ~  dusa_u_1 + dusa_cpi + dusa_cpi_1 + dusa_cpi_2)
-summary(ARMA12usaufitSR)
+{
+  ARMA12usaufitSR <- dynlm(dusa_u ~  dusa_u_1 + dusa_cpi + dusa_cpi_1 + dusa_cpi_2)
+  summary(ARMA12usaufitSR)
+}
 
-#AR(2)
-AR2usaufitSR <- dynlm(dusa_u ~  dusa_cpi + dusa_u_1 + dusa_u_2)
-summary(AR2usaufitSR)
+################################################################################
+##### AUTOREGRESSIVE (2) MODEL #################################################
+################################################################################
 
-#AR(3)
+{
+  AR2usaufitSR <- dynlm(dusa_u ~  dusa_cpi + dusa_u_1 + dusa_u_2)
+  summary(AR2usaufitSR)
+}
+
+################################################################################
+##### AUTOREGRESSIVE (3) MODEL #################################################
+################################################################################
+
 dusa_cpi_3 <- lag(dusa_cpi, -3, na.pad = TRUE) 
 dusa_u_3 <- lag(dusa_u, -3, na.pad = TRUE)
-AR3usaufitSR <- dynlm(dusa_u ~  dusa_cpi + dusa_u_1 + dusa_u_2+ dusa_u_3)
-summary(AR3usaufitSR)
 
-#AIC & BIC
-AIC(usaufitSR, ARusaufitSR, ARMAusaufitSR, ARMA2usaufitSR, ARMA21usaufitSR, AR2usaufitSR, AR3usaufitSR)
-BIC(usaufitSR, ARusaufitSR, ARMAusaufitSR, ARMA2usaufitSR, ARMA21usaufitSR, AR2usaufitSR, AR3usaufitSR)
+{
+  AR3usaufitSR <- dynlm(dusa_u ~  dusa_cpi + dusa_u_1 + dusa_u_2+ dusa_u_3)
+  summary(AR3usaufitSR)
+}
+
+################################################################################
+##### SELECTING BEST MODEL #####################################################
+################################################################################
+
+AIC(usaufitSR, ARusaufitSR, ARMAusaufitSR)
+AIC(ARMA2usaufitSR, ARMA21usaufitSR, AR2usaufitSR)
+AIC(AR3usaufitSR)
+BIC(usaufitSR, ARusaufitSR, ARMAusaufitSR)
+BIC(ARMA2usaufitSR, ARMA21usaufitSR, AR2usaufitSR)
+BIC(AR3usaufitSR)
 
 #the best one is AR(3)
 
-#TEST STATISTICI
+################################################################################
+##### HETEROSKEDASTICITY TEST ##################################################
+################################################################################
 
-#TEST ETEROSCHEDASTICITà
 bptest(AR3usaufitSR, studentize = FALSE) #ACCETTO H0 -> Omoschedasticità
 
-#ARCH TEST
-#library(FinTS)
+################################################################################
+##### ARCH TEST ################################################################
+################################################################################
+
 archTestusa_u<- ArchTest(AR3usaufitSR$residuals, lags=1, demean=FALSE)
 archTestusa_u
 
-#DISTRIBUZIONE F-STATISTIC
+################################################################################
+##### F-STATISTIC DISTRIBUTION TEST ############################################
+################################################################################
+
 resettest(dusa_u ~  dusa_cpi + dusa_u_1+ dusa_u_2+ dusa_u_3) 
 
-#WALD
+################################################################################
+##### WALD TEST ################################################################
+################################################################################
 
 wald.test(Sigma = vcov(AR3usaufitSR), b = coef(AR3usaufitSR), Terms = 2:5)
 
-#AUTOCORRELATION
-x11()
+################################################################################
+##### DURBIN-WATSON TEST #######################################################
+################################################################################
+
 dwtest(AR3usaufitSR)
 Box.test(AR3usaufitSR$residuals, type = "Ljung-Box", lag = 6)
 Box.test(AR3usaufitSR$residuals, type = "Box-Pierce", lag = 6) 
 ACF_SR_USA_Unempl <-AR3usaufitSR$residuals
-acf(ACF_SR_USA_Unempl)
+
+{
+  x11()
+  acf(ACF_SR_USA_Unempl)
+}
+
+
